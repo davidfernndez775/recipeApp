@@ -12,10 +12,7 @@ ENV ENVIRONMENT="production"
 # se pasan las dependencias definidas en los requerimientos
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements.dev.txt /tmp/requirements.dev.txt
-# se pasa la carpeta de la aplicacion y el puerto
-COPY ./app /app
-WORKDIR /app
-EXPOSE 8000
+
 
 # es importante que sea todo en un solo comando para que la imagen sea ligera, aca se
 # crea el venv, se actualiza el pip, se instalan las dependencias, se borran las dependencias
@@ -26,11 +23,13 @@ EXPOSE 8000
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
     /py/bin/pip install -r /tmp/requirements.txt && \
-    if [ "$ENVIRONMENT" = "development"]; \
-        then /py/bin/pip install -r /tmp/requirements.dev.txt; \
-    fi && \
-    rm -rf /tmp && \
-    adduser -D -H -s /bin/false django-user
+    if [ "$ENVIRONMENT" = "development" ]; then /py/bin/pip install -r /tmp/requirements.dev.txt; fi && \
+    rm -rf /tmp
+
+# se pasa la carpeta de la aplicacion y el puerto
+COPY ./app /app
+WORKDIR /app
+EXPOSE 8000
 
 ENV PATH="/py/bin:$PATH"
 
