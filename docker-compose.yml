@@ -6,7 +6,7 @@ services:
   app:
     build:               
       context: .         #va a crear el archivo de docker en el directorio actual
-      environment:
+      args:
         - DEV=true
     ports:
       - "8000:8000"       # coloca el puerto 8000 de la PC dentro del contenedor de Docker
