@@ -19,16 +19,25 @@ EXPOSE 8000
 ARG DEV=false
 
 # Es importante que sea todo en un solo comando para que la imagen sea ligera, acá se
-# crea el venv, se actualiza el pip, se instalan las dependencias, se borran las dependencias
-# una vez que la imagen es creada. Finalmente se crea un usuario distinto del usuario root
+# crea el venv, se actualiza el pip, se instalan las dependencias de la base de datos.
+# Primero el postgresql-client y luego otras dependencias que solo son necesarias para
+# la instalacion del cliente de postgresql.
+# Se instalan los requerimientos, primero los generales y luego los de desarrollo si
+# fuera el caso. Se borran las dependencias una vez que la imagen es creada, solo las
+# dependencias que son necesarias para la instalacion. 
+# Finalmente se crea un usuario distinto del usuario root
 # de la distribución de Linux, esto se hace para correr la aplicación desde este usuario y no
 # desde el root, porque este último tiene todos los privilegios de administrador y en caso 
 # de hackeo de la aplicación todo el contenedor se ve comprometido
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
+    apk add --update --no-cache postgresql-client && \
+    apk add --update --no-cache --virtual .tmp-build-deps \
+    build-base postgresql-dev musl-dev && \
     /py/bin/pip install -r /tmp/requirements.txt && \
     if [ "$DEV" = "true" ]; then /py/bin/pip install -r /tmp/requirements.dev.txt; fi && \
     rm -rf /tmp && \
+    apk del .tmp-build-deps && \
     adduser -D -H -s /bin/false django-user
 
 ENV PATH="/py/bin:$PATH"

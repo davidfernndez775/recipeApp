@@ -5,7 +5,7 @@ version: '3.9'
 services:
   app:
     build:               
-      context: .         #va a crear el archivo de docker en el directorio actual
+      context: .         # va a crear el archivo de docker en el directorio actual
       args:
         - DEV=true
     ports:
@@ -14,3 +14,22 @@ services:
       - ./app:/app      # define como se mapea el sistema de archivos dentro del contenedor
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
+    environment:        # definimos la conexion con la base de datos
+      - DB_HOST=db      # definimos el nombre del servicio de la base de datos
+      - DB_NAME=devdb      # nombre de la base de datos
+      - DB_USER=devuser     # usuario
+      - DB_PASS=changeme    # password
+    depends_on:       # se define el servicio que hay que implementar primero
+      - db
+
+  db:
+    image: postgres:13-alpine
+    volumes:    # se crea un volumen para guardar y cargar la info en la base de datos
+      - dev-db-data:/var/lib/postgresql/data
+    environment:    # se define las variables para la base de datos
+      - POSTGRES_DB=devdb       # nombre de la base de datos
+      - POSTGRES_USER=devuser       # usuario
+      - POSTGRES_PASSWORD=changeme   # password
+
+volumes:
+  dev-db-data:
