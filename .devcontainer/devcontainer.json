@@ -1,0 +1,14 @@
+{
+  "name": "My Django Project",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",  // Cambia esto por el nombre del servicio de tu app en Docker Compose
+  "workspaceFolder": "/app",
+  "settings": {
+    "python.pythonPath": "/py/lib/python3.9"  // Asegúrate de que este sea el path correcto al intérprete de Python en tu contenedor
+  },
+  "extensions": [
+    "ms-python.python"  // Extensión de Python
+  ],
+  "postCreateCommand": "pip install -r requirements.txt",  // Instala las dependencias al iniciar el contenedor
+  "remoteUser": "django-user"  // El usuario dentro del contenedor
+}

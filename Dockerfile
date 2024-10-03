@@ -14,7 +14,7 @@ COPY ./app /app
 WORKDIR /app
 EXPOSE 8000
 
-# Se define un argumento que va a establecer el modo DEV en falso, esto se cambia 
+# Se define un argumento que va a establecer el modo DEV en falso, esto se cambia
 # según el archivo de configuración .yml que se use
 ARG DEV=false
 
@@ -24,10 +24,10 @@ ARG DEV=false
 # la instalacion del cliente de postgresql.
 # Se instalan los requerimientos, primero los generales y luego los de desarrollo si
 # fuera el caso. Se borran las dependencias una vez que la imagen es creada, solo las
-# dependencias que son necesarias para la instalacion. 
+# dependencias que son necesarias para la instalacion.
 # Finalmente se crea un usuario distinto del usuario root
 # de la distribución de Linux, esto se hace para correr la aplicación desde este usuario y no
-# desde el root, porque este último tiene todos los privilegios de administrador y en caso 
+# desde el root, porque este último tiene todos los privilegios de administrador y en caso
 # de hackeo de la aplicación todo el contenedor se ve comprometido
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
