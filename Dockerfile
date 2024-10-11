@@ -28,7 +28,8 @@ ARG DEV=false
 # Finalmente se crea un usuario distinto del usuario root
 # de la distribución de Linux, esto se hace para correr la aplicación desde este usuario y no
 # desde el root, porque este último tiene todos los privilegios de administrador y en caso
-# de hackeo de la aplicación todo el contenedor se ve comprometido
+# de hackeo de la aplicación todo el contenedor se ve comprometido. No obstante es necesario
+# crear un directorio donde el django user tenga determinados privilegios
 RUN python -m venv /py && \
     /py/bin/pip install --upgrade pip && \
     apk add --update --no-cache postgresql-client && \
