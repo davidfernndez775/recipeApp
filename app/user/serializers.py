@@ -21,6 +21,21 @@ class UserSerializer(serializers.ModelSerializer):
         '''Create and return a user with encryted password'''
         return get_user_model().objects.create_user(**validated_data)
 
+    def update(self, instance, validated_data):
+        '''Update and return user'''
+        # primero tomamos el password del validated_data y lo guardamos en una variable
+        # y lo borramos del validated_data
+        password = validated_data.pop('password', None)
+        # invocamos el metodo update de Django para que haga el trabajo
+        user = super().update(instance, validated_data)
+        # chequeamos si hay un password
+        if password:
+            # si el usuario envio el password, lo actualizamos
+            user.set_password(password)
+            user.save()
+        # retornamos el usuario actualizado
+        return user
+
 
 class AuthTokenSerializer(serializers.Serializer):
     '''Serializer for the user auth token'''
