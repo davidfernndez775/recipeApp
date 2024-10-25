@@ -10,6 +10,11 @@ from django.contrib.auth import get_user_model
 # el resto de los modelos se importa normalmente
 from core import models
 
+# metodo para crear un usuario
+def create_user(email='user@example.com', password='testpass123'):
+    '''Create and return a new user'''
+    return get_user_model().objects.create_user(email, password)
+
 
 class ModelTests(TestCase):
     '''Test models'''
@@ -77,3 +82,14 @@ class ModelTests(TestCase):
         )
         # chequea que el nombre de la receta coincida
         self.assertEqual(str(recipe), recipe.title)
+
+
+    def test_create_tag(self):
+        '''Test creating a tag is successful'''
+        # creamos el usuario
+        user=create_user()
+        # creamos la tag
+        tag = models.Tag.objects.create(user=user, name='Tag1')
+        # comprobamos que el valor de la base de datos coincide con el
+        # argumento que pasamos
+        self.assertEqual(str(tag), tag.name)
