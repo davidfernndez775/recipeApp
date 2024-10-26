@@ -10,7 +10,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Recipe
+from core.models import Recipe, Tag
 
 from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
@@ -263,3 +263,38 @@ class PrivateRecipeApiTests(TestCase):
         # comprobamos mediante consulta directa que la receta aun existe
         # en la base de datos
         self.assertTrue(Recipe.objects.filter(id=recipe.id).exists())
+
+    def test_create_recipe_with_new_tags(self):
+        '''Test creating a recipe with new tags'''
+        # creamos la informacion para una receta con tags
+        payload = {
+            'title':'Thai Prawn Curry',
+            'time_minutes': 30,
+            'price': Decimal('2.50'),
+            'tags': [{'name':'Thai'}, {'name':'Dinner'}]
+        }
+        # al hacer la peticion como tenemos un objeto(tag) dentro de otro
+        # (recipe) es necesario especificar el formato
+        res = self.client.post(RECIPES_URL, payload, format='json')
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        # comprobamos la creacion de la receta en la base de datos
+        # hacemos la consulta
+        recipes = Recipe.objects.filter(user=self.user)
+        # comprobamos que haya una sola receta
+        self.assertEqual(recipes.count(), 1)
+        # pasamos la informacion a la variable recipe
+        recipe = recipes[0]
+        # comprobamos que la receta tiene 2 tags
+        self.assertEqual(recipe.tags.count(), 2)
+        # comprobamos que cada clave del tag en el payload
+        # coincide con los valores en la base de datos
+        for tag in payload['tags']:
+            exists = recipe.tags.filter(
+                name = tag['name'],
+                user = self.user,
+            ).exists()
+            # confirmamos que existe la coincidencia
+            self.assertTrue(exists)
+
+    
