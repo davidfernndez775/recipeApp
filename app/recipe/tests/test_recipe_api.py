@@ -289,6 +289,7 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(recipe.tags.count(), 2)
         # comprobamos que cada clave del tag en el payload
         # coincide con los valores en la base de datos
+        # tanto del usuario como el name
         for tag in payload['tags']:
             exists = recipe.tags.filter(
                 name = tag['name'],
@@ -296,5 +297,101 @@ class PrivateRecipeApiTests(TestCase):
             ).exists()
             # confirmamos que existe la coincidencia
             self.assertTrue(exists)
+
+    def test_create_recipe_with_existing_tags(self):
+        '''Test creating a recipe with existing tag'''
+        # creamos en la base de datos una tag previa
+        tag_indian = Tag.objects.create(user=self.user, name='Indian')
+        # creamos una receta que va a tener la tag creada previamente
+        # y otra que es nueva
+        payload = {
+            'title':'Pongal',
+            'time_minutes': 60,
+            'price': Decimal('4.50'),
+            'tags': [{'name':'Indian'},{'name':'Breakfast'}],
+        }
+        # hacemos la peticion
+        res = self.client.post(RECIPES_URL, payload, format='json')
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        # hacemos la consulta a la base de datos de las recetas
+        recipes = Recipe.objects.filter(user=self.user)
+        # comprobamos que se ha creado una sola receta
+        self.assertEqual(recipes.count(), 1)
+        # asignamos a una variable la receta creada
+        recipe = recipes[0]
+        # comprobamos la cantidad de tags en la receta
+        self.assertEqual(recipe.tags.count(), 2)
+        # comprobamos que la etiqueta se encuentre
+        self.assertIn(tag_indian, recipe.tags.all())
+        # comprobamos los valores dentro de las tags
+        for tag in payload['tags']:
+            exists = recipe.tags.filter(
+                name=tag['name'],
+                user=self.user,
+            ).exists()
+            self.assertTrue(exists)
+
+
+    def test_create_tag_on_update(self):
+        '''Test creating tag when updating a recipe'''
+        # creamos una receta
+        recipe = create_recipe(user=self.user)
+        # creamos el tag a actualizar
+        payload = {'tags':[{'name': 'Lunch'}]}
+        # definimos la url
+        url = detail_url(recipe.id)
+        # hacemos la peticion
+        res = self.client.patch(url, payload, format='json')
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # hacemos una consulta a la base de datos para buscar el tag
+        new_tag = Tag.objects.get(user=self.user, name='Lunch')
+        # comprobamos que la etiqueta existe en la receta que 
+        # creamos al principio, notese que no se usa la funcion 
+        # refresh_from_db cuando se actualizan campos many to many
+        # en su lugar se usa .all()
+        self.assertIn(new_tag, recipe.tags.all())
+
+    def test_update_recipe_assign_tag(self):
+        '''Test assigning an existing tag when updating a recipe'''
+        # creamos una tag
+        tag_breakfast = Tag.objects.create(user=self.user, name='Breakfast')
+        # creamos una receta
+        recipe = create_recipe(user=self.user)
+        # agregamos la tag a la receta
+        recipe.tags.add(tag_breakfast)
+        # creamos una nueva tag
+        tag_lunch = Tag.objects.create(user=self.user, name='Lunch')
+        # definimos la info para actualizar
+        payload = {'tags':[{'name':'Lunch'}]}
+        # definimos la url
+        url = detail_url(recipe.id)
+        # hacemos la peticion
+        res = self.client.patch(url, payload, format='json')
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # comprobamos que tag_lunch sustituyo a tag_breakfast
+        self.assertIn(tag_lunch, recipe.tags.all())
+        self.assertNotIn(tag_breakfast, recipe.tags.all())
+
+
+    def test_clear_recipe_tags(self):
+        '''Test clearing a recipes tags'''
+        # creamos una receta con su tag
+        tag = Tag.objects.create(user=self.user, name='Dessert')
+        recipe = create_recipe(user=self.user)
+        recipe.tags.add(tag)
+        # actualizamos borrando las tags de la receta
+        payload = {'tags': []}
+        # definimos el url
+        url = detail_url(recipe.id)
+        # hacemos la peticion
+        res = self.client.patch(url, payload, format='json')
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # comprobamos que se borro el tag
+        self.assertEqual(recipe.tags.count(), 0)
+
 
     
