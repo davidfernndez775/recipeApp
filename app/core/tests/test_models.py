@@ -11,6 +11,8 @@ from django.contrib.auth import get_user_model
 from core import models
 
 # metodo para crear un usuario
+
+
 def create_user(email='user@example.com', password='testpass123'):
     '''Create and return a new user'''
     return get_user_model().objects.create_user(email, password)
@@ -83,13 +85,24 @@ class ModelTests(TestCase):
         # chequea que el nombre de la receta coincida
         self.assertEqual(str(recipe), recipe.title)
 
-
     def test_create_tag(self):
         '''Test creating a tag is successful'''
         # creamos el usuario
-        user=create_user()
+        user = create_user()
         # creamos la tag
         tag = models.Tag.objects.create(user=user, name='Tag1')
         # comprobamos que el valor de la base de datos coincide con el
         # argumento que pasamos
         self.assertEqual(str(tag), tag.name)
+
+    def test_create_ingredient(self):
+        '''Test creating and ingredient is successful'''
+        user = create_user()
+        ingredient = models.Ingredient.objects.create(
+            user=user,
+            name='Ingredient1'
+        )
+
+        # el primer parametro es lo que recibe de la consulta y el segundo es el valor
+        # de la variable que creamos
+        self.assertEqual(str(ingredient), ingredient.name)
