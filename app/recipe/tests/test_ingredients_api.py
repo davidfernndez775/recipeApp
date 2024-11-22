@@ -15,6 +15,11 @@ from recipe.serializers import IngredientSerializer
 INGREDIENTS_URL = reverse('recipe:ingredient-list')
 
 
+def detail_url(ingredient_id):
+    '''Create and ingredient detail URL'''
+    return reverse('recipe:ingredient-detail', args=[ingredient_id])
+
+
 # *creamos el usuario de pruebas
 
 
@@ -83,3 +88,34 @@ class PrivateIngredientsApiTests(TestCase):
         # a los valores del ingrediente creado por el usuario autenticado
         self.assertEqual(res.data[0]['name'], ingredient.name)
         self.assertEqual(res.data[0]['id'], ingredient.id)
+
+    # test para chequear la actualizacion de un ingrediente
+    def test_update_ingredients(self):
+        '''Test updating an ingredient'''
+        # creamos un ingrediente
+        ingredient = Ingredient.objects.create(user=self.user, name='Cilantro')
+        # creamos la informacion a actualizar
+        payload = {'name': 'Coriander'}
+        # definimos el url
+        url = detail_url(ingredient.id)
+        # hacemos la peticion
+        res = self.client.patch(url, payload)
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_200_OK)\
+            # actualizamos la consulta a la base de datos
+        ingredient.refresh_from_db()
+        # comprobamos la respuesta de la base de datos con el payload
+        self.assertEqual(ingredient.name, payload['name'])
+
+    def test_delete_ingredient(self):
+        '''Test deleting an ingredient'''
+        # creamos un ingrediente
+        ingredient = Ingredient.objects.create(user=self.user, name='cinnamon')
+        # hacemos la peticion de borrado
+        url = detail_url(ingredient.id)
+        res = self.client.delete(url)
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        # hacemos una consulta a la base de datos para comprobar que la tag no esta
+        ingredient = Ingredient.objects.filter(user=self.user)
+        self.assertFalse(ingredient.exists())
