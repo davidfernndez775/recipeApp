@@ -10,7 +10,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Recipe, Tag
+from core.models import Recipe, Tag, Ingredient
 
 from recipe.serializers import RecipeSerializer, RecipeDetailSerializer
 
@@ -394,4 +394,72 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(recipe.tags.count(), 0)
 
 
-    
+    def test_create_recipe_with_new_ingredients(self):
+        '''Test creating a recipe with new ingredients'''
+        # creamos la informacion para una receta con tags
+        payload = {
+            'title':'Sashimi',
+            'time_minutes': 30,
+            'price': Decimal('2.50'),
+            'ingredients': [{'name':'Fish'}, {'name':'Salt'}]
+        }
+        # al hacer la peticion como tenemos un objeto(ingredient) dentro de otro
+        # (recipe) es necesario especificar el formato
+        res = self.client.post(RECIPES_URL, payload, format='json')
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        # comprobamos la creacion de la receta en la base de datos
+        # hacemos la consulta
+        recipes = Recipe.objects.filter(user=self.user)
+        # comprobamos que haya una sola receta
+        self.assertEqual(recipes.count(), 1)
+        # pasamos la informacion a la variable recipe
+        recipe = recipes[0]
+        # comprobamos que la receta tiene 2 ingredientes
+        self.assertEqual(recipe.ingredients.count(), 2)
+        # comprobamos que cada clave del ingredients en el payload
+        # coincide con los valores en la base de datos
+        # tanto del usuario como el name
+        for ingredient in payload['ingredients']:
+            exists = recipe.ingredients.filter(
+                name = ingredient['name'],
+                user = self.user,
+            ).exists()
+            # confirmamos que existe la coincidencia
+            self.assertTrue(exists)
+
+
+
+    def test_create_recipe_with_existing_ingredients(self):
+        '''Test creating a recipe with existing ingredients'''
+        # creamos en la base de datos un ingrediente previo
+        ingredient_rice = Ingredient.objects.create(user=self.user, name='Rice')
+        # creamos una receta que va a tener la tag creada previamente
+        # y otra que es nueva
+        payload = {
+            'title':'Sushi',
+            'time_minutes': 60,
+            'price': Decimal('4.50'),
+            'ingredients': [{'name':'Rice'},{'name':'Fish'}],
+        }
+        # hacemos la peticion
+        res = self.client.post(RECIPES_URL, payload, format='json')
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        # hacemos la consulta a la base de datos de las recetas
+        recipes = Recipe.objects.filter(user=self.user)
+        # comprobamos que se ha creado una sola receta
+        self.assertEqual(recipes.count(), 1)
+        # asignamos a una variable la receta creada
+        recipe = recipes[0]
+        # comprobamos la cantidad de ingredientes en la receta
+        self.assertEqual(recipe.ingredients.count(), 2)
+        # comprobamos que la etiqueta se encuentre
+        self.assertIn(ingredient_rice, recipe.ingredients.all())
+        # comprobamos los valores dentro de los ingredientes
+        for ingredient in payload['ingredients']:
+            exists = recipe.ingredients.filter(
+                name=ingredient['name'],
+                user=self.user,
+            ).exists()
+            self.assertTrue(exists)
