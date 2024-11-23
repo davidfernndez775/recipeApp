@@ -463,3 +463,65 @@ class PrivateRecipeApiTests(TestCase):
                 user=self.user,
             ).exists()
             self.assertTrue(exists)
+
+
+    def test_create_ingredient_on_update(self):
+        '''Test creating an ingredient when updating a recipe'''
+        # creamos una receta
+        recipe = create_recipe(user=self.user)
+        # creamos el ingrediente a actualizar
+        payload = {'ingredients':[{'name': 'Beef'}]}
+        # definimos la url
+        url = detail_url(recipe.id)
+        # hacemos la peticion
+        res = self.client.patch(url, payload, format='json')
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # hacemos una consulta a la base de datos para buscar el ingrediente
+        new_ingredient = Ingredient.objects.get(user=self.user, name='Beef')
+        # comprobamos que la etiqueta existe en la receta que 
+        # creamos al principio, notese que no se usa la funcion 
+        # refresh_from_db cuando se actualizan campos many to many
+        # en su lugar se usa .all()
+        self.assertIn(new_ingredient, recipe.ingredients.all())
+
+
+    def test_update_recipe_assign_ingredient(self):
+        '''Test assigning an existing ingredient when updating a recipe'''
+        # creamos un ingrediente
+        beef_ingredient = Ingredient.objects.create(user=self.user, name='Beef')
+        # creamos una receta
+        recipe = create_recipe(user=self.user)
+        # agregamos el ingrediente a la receta
+        recipe.ingredients.add(beef_ingredient)
+        # creamos un nuevo ingrediente
+        pork_ingredient = Ingredient.objects.create(user=self.user, name='Pork')
+        # definimos la info para actualizar
+        payload = {'ingredients':[{'name':'Pork'}]}
+        # definimos la url
+        url = detail_url(recipe.id)
+        # hacemos la peticion
+        res = self.client.patch(url, payload, format='json')
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # comprobamos que tag_lunch sustituyo a tag_breakfast
+        self.assertIn(pork_ingredient, recipe.ingredients.all())
+        self.assertNotIn(beef_ingredient, recipe.ingredients.all())
+
+
+    def test_clear_recipe_ingredients(self):
+        '''Test clearing recipes ingredients'''
+        # creamos una receta con su ingrediente
+        ingredient = Ingredient.objects.create(user=self.user, name='Potatoes')
+        recipe = create_recipe(user=self.user)
+        recipe.ingredients.add(ingredient)
+        # actualizamos borrando los ingredientes de la receta
+        payload = {'ingredients': []}
+        # definimos el url
+        url = detail_url(recipe.id)
+        # hacemos la peticion
+        res = self.client.patch(url, payload, format='json')
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # comprobamos que se borro el ingrediente
+        self.assertEqual(recipe.ingredients.count(), 0)
