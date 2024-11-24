@@ -1,7 +1,8 @@
 '''
 Test for models
 '''
-# debe ser la primera importacion
+# primero se importan las librerias externas
+from unittest.mock import patch
 from decimal import Decimal
 
 from django.test import TestCase
@@ -106,3 +107,18 @@ class ModelTests(TestCase):
         # el primer parametro es lo que recibe de la consulta y el segundo es el valor
         # de la variable que creamos
         self.assertEqual(str(ingredient), ingredient.name)
+
+
+    # uuid es una libreria que genera un string aleatorio que funciona como un
+    # identificador unico
+    @patch('core.models.uuid.uuid4')
+    def test_recipe_file_name_uuid(self, mock_uuid):
+        '''Test generating image path'''
+        # se le hace un mocking a uuid para hacer el test, al final no queremos que 
+        # la funcion genere el string sino que use "test-uuid" para poderlo comprobar
+        uuid = 'test-uuid'
+        mock_uuid.return_value=uuid
+        # se llama a la funcion que asigna el path
+        file_path = models.recipe_image_file_path(None, 'example.jpg')
+        # chequeamos que reemplaza el nombre "example.jpg" por "test-uuid.jpg"
+        self.assertEqual(file_path, f'uploads/recipe/{uuid}.jpg')

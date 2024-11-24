@@ -2,6 +2,9 @@
 Tests for recipe APIs
 '''
 from decimal import Decimal
+import tempfile
+import os
+from PIL import Image
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -22,6 +25,11 @@ def detail_url(recipe_id):
     '''Create and return a recipe detail URL'''
     # se crea una funcion que devuelva un url para cada elemento en la base de datos
     return reverse('recipe:recipe-detail', args=[recipe_id])
+
+
+def image_upload_url(recipe_id):
+    '''Create and return and image upload URL'''
+    return reverse('recipe:recipe-upload-image', args=[recipe_id])
 
 
 # *definimos el metodo para crear la receta
@@ -525,3 +533,61 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         # comprobamos que se borro el ingrediente
         self.assertEqual(recipe.ingredients.count(), 0)
+
+
+class ImageUploadTests(TestCase):
+    '''Tests for the image upload API'''
+
+
+    # creamos un usuario, lo autenticamos y creamos una receta con los 
+    # parametros por defecto
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'user@example.com',
+            'password123',
+        )
+        self.client.force_authenticate(self.user)
+        self.recipe=create_recipe(user=self.user)
+
+    # el metodo tearDown se ejecuta despues de los tests, el setUp se 
+    # ejecuta antes. se pone para asegurarse que la imagen se borra
+    # despues de cada test
+    def tearDown(self):
+        self.recipe.image.delete()
+
+    
+    def test_upload_image(self):
+        '''Test uploading a image to a recipe'''
+        # creamos un url a partir del id de la receta
+        url= image_upload_url(self.recipe.id)
+        # creamos un archivo temporal, para crear una imagen y hacer el test
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
+            # creamos una imagen de 10 por 10 px
+            img=Image.new('RGB', (10,10))
+            # guarda la imagen de la memoria a un archivo
+            img.save(image_file, format='JPEG')
+            # esta linea mueve el puntero en memoria al inicio del archivo
+            image_file.seek(0)
+            # se crea el payload para la actualizacion
+            payload = {'image':image_file}
+            # se realiza la peticion, especificando formulario 'multipart'
+            # que es la forma recomendada para subir imagenes
+            res=self.client.post(url, payload, format='multipart')
+        # refrescamos la base de datos
+        self.recipe.refresh_from_db()
+        # comprobamos la peticion
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        # chequeamos que hay un campo 'image' en la respuesta de la peticion
+        self.assertIn('image', res.data)
+        # chequeamos que hay un atributo 'path' en la consulta a la base de datos
+        self.assertTrue(os.path.exists(self.recipe.image.path))
+
+    def test_upload_image_bad_request(self):
+        '''Test uploading invalid image'''
+        url = image_upload_url(self.recipe.id)
+        # en este caso no se actualiza con una imagen para provocar el error
+        payload = {'image': 'notanimage'}
+        res = self.client.post(url, payload, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)

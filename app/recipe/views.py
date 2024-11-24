@@ -2,7 +2,9 @@
 Views for the recipe API
 '''
 from typing import Any
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
@@ -35,6 +37,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         '''Return the serializer class for request'''
         if self.action == 'list':
             return serializers.RecipeSerializer
+        elif self.action == 'upload_image':
+            return serializers.RecipeImageSerializer
         return self.serializer_class
 
     # metodo para creacion
@@ -42,6 +46,24 @@ class RecipeViewSet(viewsets.ModelViewSet):
         '''Create a new recipe'''
         # se le pasa el usuario
         serializer.save(user=self.request.user)
+
+    # metodo para la actualizacion de una imagen, adicionamos una accion,
+    # se define para el metodo 'POST', para una vista detalle, se define 
+    # el url para la accion: 'upload-image'
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        '''Upload an image to recipe'''
+        # se obtiene la receta usando el pk proporcionado
+        recipe= self.get_object()
+        # pasamos los datos al endpoint
+        serializer = self.get_serializer(recipe, data=request.data)
+        # chequeamos que el serializador es valido
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        # devolvemos el bad_request si no es valido
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class BaseRecipeAttrViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):

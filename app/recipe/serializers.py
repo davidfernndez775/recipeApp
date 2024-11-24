@@ -115,3 +115,16 @@ class RecipeDetailSerializer(RecipeSerializer):
         fields = RecipeSerializer.Meta.fields + ['description']
 
 
+# se crea un serializador aparte porque es una buena practica solamente
+# actualizar un tipo de datos en un API, en este caso usamos un API 
+# para las imagenes
+class RecipeImageSerializer(serializers.ModelSerializer):
+    '''Serializer for uploading images to recipes'''
+
+    class Meta:
+        model = Recipe
+        fields = ['id', 'image']
+        read_only_fields = ['id']
+        # se pone required porque si no hay una imagen no tiene sentido usar el
+        # serializador
+        extra_kwargs = {'image': {'required': 'True'}}

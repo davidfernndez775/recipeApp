@@ -12,6 +12,7 @@ services:
       - "8000:8000"       # coloca el puerto 8000 de la PC dentro del contenedor de Docker
     volumes:
       - ./app:/app      # define como se mapea el sistema de archivos dentro del contenedor
+      - dev-static-data:/vol/web
     command: >
       sh -c "python manage.py wait_for_db &&
             python manage.py migrate &&
@@ -35,3 +36,4 @@ services:
 
 volumes:
   dev-db-data:
+  dev-static-data:
