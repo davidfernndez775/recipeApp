@@ -112,7 +112,8 @@ class RecipeDetailSerializer(RecipeSerializer):
     '''Serializer for recipe detail view'''
 
     class Meta(RecipeSerializer.Meta):
-        fields = RecipeSerializer.Meta.fields + ['description']
+        # se pone image solo si existiera ese campo
+        fields = RecipeSerializer.Meta.fields + ['description', 'image']
 
 
 # se crea un serializador aparte porque es una buena practica solamente
