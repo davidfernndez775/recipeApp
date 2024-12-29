@@ -66,7 +66,7 @@ class AuthTokenSerializer(serializers.Serializer):
         )
         # si no existe el usuario
         if not user:
-            msg = _('Unable to autheticate with provided credentials')
+            msg = _('Unable to authenticate with provided credentials')
             # cuando elevamos un error se ejecuta un 400_BAD_REQUEST
             raise serializers.ValidationError(msg, code='authorization')
         # si existe el usuario

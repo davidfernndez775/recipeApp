@@ -1,6 +1,9 @@
 '''
 Test for the ingredients API
 '''
+
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.test import TestCase
@@ -8,7 +11,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import Ingredient
+from core.models import Ingredient, Recipe
 
 from recipe.serializers import IngredientSerializer
 
@@ -119,3 +122,43 @@ class PrivateIngredientsApiTests(TestCase):
         # hacemos una consulta a la base de datos para comprobar que la tag no esta
         ingredient = Ingredient.objects.filter(user=self.user)
         self.assertFalse(ingredient.exists())
+
+    def test_filter_ingredients_assigned_to_recipes(self):
+        '''Test listing ingredients to those assigned to recipes'''
+        # creamos dos ingredientes
+        in1 = Ingredient.objects.create(user=self.user, name='Apples')
+        in2 = Ingredient.objects.create(user=self.user, name='Turkey')
+        # creamos una receta
+        recipe = Recipe.objects.create(
+            title='Apple Crumble', time_minutes=5, price=Decimal('4.50'), user=self.user)
+        # agregamos un ingrediente a la receta
+        recipe.ingredients.add(in1)
+        # realizamos una peticion para los ingredientes asignados en al menos una receta,
+        # por eso se usa el assigned_only: 1, si no se pone se devuelven todos los ingredientes
+        # esten asignados o no
+        res = self.client.get(INGREDIENTS_URL, {'assigned_only': 1})
+        # serializamos los ingredientes desde la base de datos
+        s1 = IngredientSerializer(in1)
+        s2 = IngredientSerializer(in2)
+        # chequeamos que en la respuesta solo se devuelva el ingrediente asignado a la receta
+        self.assertIn(s1.data, res.data)
+        self.assertNotIn(s2.data, res.data)
+
+    def test_filtered_ingredients_unique(self):
+        '''Test filtered ingredients returns a unique list'''
+        # creamos dos ingredientes
+        in1 = Ingredient.objects.create(user=self.user, name='Eggs')
+        in2 = Ingredient.objects.create(user=self.user, name='Lentils')
+        # creamos dos recetas
+        recipe1 = Recipe.objects.create(
+            title='Eggs Benedict', time_minutes=60, price=Decimal('7.00'), user=self.user,)
+        recipe2 = Recipe.objects.create(
+            title='Herb Eggs', time_minutes=20, price=Decimal('4.00'), user=self.user,)
+        # asignamos solo el primer ingrediente a las dos recetas
+        recipe1.ingredients.add(in1)
+        recipe2.ingredients.add(in1)
+        # realizamos la peticion para ver los ingredientes asignados
+        res = self.client.get(INGREDIENTS_URL, {'assigned_only': 1})
+        # comprobamos que la respuesta solo contenga un ingrediente, a pesar de que este asignado a varias
+        # recetas
+        self.assertEqual(len(res.data), 1)

@@ -276,10 +276,10 @@ class PrivateRecipeApiTests(TestCase):
         '''Test creating a recipe with new tags'''
         # creamos la informacion para una receta con tags
         payload = {
-            'title':'Thai Prawn Curry',
+            'title': 'Thai Prawn Curry',
             'time_minutes': 30,
             'price': Decimal('2.50'),
-            'tags': [{'name':'Thai'}, {'name':'Dinner'}]
+            'tags': [{'name': 'Thai'}, {'name': 'Dinner'}]
         }
         # al hacer la peticion como tenemos un objeto(tag) dentro de otro
         # (recipe) es necesario especificar el formato
@@ -300,8 +300,8 @@ class PrivateRecipeApiTests(TestCase):
         # tanto del usuario como el name
         for tag in payload['tags']:
             exists = recipe.tags.filter(
-                name = tag['name'],
-                user = self.user,
+                name=tag['name'],
+                user=self.user,
             ).exists()
             # confirmamos que existe la coincidencia
             self.assertTrue(exists)
@@ -313,10 +313,10 @@ class PrivateRecipeApiTests(TestCase):
         # creamos una receta que va a tener la tag creada previamente
         # y otra que es nueva
         payload = {
-            'title':'Pongal',
+            'title': 'Pongal',
             'time_minutes': 60,
             'price': Decimal('4.50'),
-            'tags': [{'name':'Indian'},{'name':'Breakfast'}],
+            'tags': [{'name': 'Indian'}, {'name': 'Breakfast'}],
         }
         # hacemos la peticion
         res = self.client.post(RECIPES_URL, payload, format='json')
@@ -340,13 +340,12 @@ class PrivateRecipeApiTests(TestCase):
             ).exists()
             self.assertTrue(exists)
 
-
     def test_create_tag_on_update(self):
         '''Test creating tag when updating a recipe'''
         # creamos una receta
         recipe = create_recipe(user=self.user)
         # creamos el tag a actualizar
-        payload = {'tags':[{'name': 'Lunch'}]}
+        payload = {'tags': [{'name': 'Lunch'}]}
         # definimos la url
         url = detail_url(recipe.id)
         # hacemos la peticion
@@ -355,8 +354,8 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         # hacemos una consulta a la base de datos para buscar el tag
         new_tag = Tag.objects.get(user=self.user, name='Lunch')
-        # comprobamos que la etiqueta existe en la receta que 
-        # creamos al principio, notese que no se usa la funcion 
+        # comprobamos que la etiqueta existe en la receta que
+        # creamos al principio, notese que no se usa la funcion
         # refresh_from_db cuando se actualizan campos many to many
         # en su lugar se usa .all()
         self.assertIn(new_tag, recipe.tags.all())
@@ -372,7 +371,7 @@ class PrivateRecipeApiTests(TestCase):
         # creamos una nueva tag
         tag_lunch = Tag.objects.create(user=self.user, name='Lunch')
         # definimos la info para actualizar
-        payload = {'tags':[{'name':'Lunch'}]}
+        payload = {'tags': [{'name': 'Lunch'}]}
         # definimos la url
         url = detail_url(recipe.id)
         # hacemos la peticion
@@ -382,7 +381,6 @@ class PrivateRecipeApiTests(TestCase):
         # comprobamos que tag_lunch sustituyo a tag_breakfast
         self.assertIn(tag_lunch, recipe.tags.all())
         self.assertNotIn(tag_breakfast, recipe.tags.all())
-
 
     def test_clear_recipe_tags(self):
         '''Test clearing a recipes tags'''
@@ -401,15 +399,14 @@ class PrivateRecipeApiTests(TestCase):
         # comprobamos que se borro el tag
         self.assertEqual(recipe.tags.count(), 0)
 
-
     def test_create_recipe_with_new_ingredients(self):
         '''Test creating a recipe with new ingredients'''
         # creamos la informacion para una receta con tags
         payload = {
-            'title':'Sashimi',
+            'title': 'Sashimi',
             'time_minutes': 30,
             'price': Decimal('2.50'),
-            'ingredients': [{'name':'Fish'}, {'name':'Salt'}]
+            'ingredients': [{'name': 'Fish'}, {'name': 'Salt'}]
         }
         # al hacer la peticion como tenemos un objeto(ingredient) dentro de otro
         # (recipe) es necesario especificar el formato
@@ -430,25 +427,24 @@ class PrivateRecipeApiTests(TestCase):
         # tanto del usuario como el name
         for ingredient in payload['ingredients']:
             exists = recipe.ingredients.filter(
-                name = ingredient['name'],
-                user = self.user,
+                name=ingredient['name'],
+                user=self.user,
             ).exists()
             # confirmamos que existe la coincidencia
             self.assertTrue(exists)
 
-
-
     def test_create_recipe_with_existing_ingredients(self):
         '''Test creating a recipe with existing ingredients'''
         # creamos en la base de datos un ingrediente previo
-        ingredient_rice = Ingredient.objects.create(user=self.user, name='Rice')
+        ingredient_rice = Ingredient.objects.create(
+            user=self.user, name='Rice')
         # creamos una receta que va a tener la tag creada previamente
         # y otra que es nueva
         payload = {
-            'title':'Sushi',
+            'title': 'Sushi',
             'time_minutes': 60,
             'price': Decimal('4.50'),
-            'ingredients': [{'name':'Rice'},{'name':'Fish'}],
+            'ingredients': [{'name': 'Rice'}, {'name': 'Fish'}],
         }
         # hacemos la peticion
         res = self.client.post(RECIPES_URL, payload, format='json')
@@ -472,13 +468,12 @@ class PrivateRecipeApiTests(TestCase):
             ).exists()
             self.assertTrue(exists)
 
-
     def test_create_ingredient_on_update(self):
         '''Test creating an ingredient when updating a recipe'''
         # creamos una receta
         recipe = create_recipe(user=self.user)
         # creamos el ingrediente a actualizar
-        payload = {'ingredients':[{'name': 'Beef'}]}
+        payload = {'ingredients': [{'name': 'Beef'}]}
         # definimos la url
         url = detail_url(recipe.id)
         # hacemos la peticion
@@ -487,25 +482,26 @@ class PrivateRecipeApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         # hacemos una consulta a la base de datos para buscar el ingrediente
         new_ingredient = Ingredient.objects.get(user=self.user, name='Beef')
-        # comprobamos que la etiqueta existe en la receta que 
-        # creamos al principio, notese que no se usa la funcion 
+        # comprobamos que la etiqueta existe en la receta que
+        # creamos al principio, notese que no se usa la funcion
         # refresh_from_db cuando se actualizan campos many to many
         # en su lugar se usa .all()
         self.assertIn(new_ingredient, recipe.ingredients.all())
 
-
     def test_update_recipe_assign_ingredient(self):
         '''Test assigning an existing ingredient when updating a recipe'''
         # creamos un ingrediente
-        beef_ingredient = Ingredient.objects.create(user=self.user, name='Beef')
+        beef_ingredient = Ingredient.objects.create(
+            user=self.user, name='Beef')
         # creamos una receta
         recipe = create_recipe(user=self.user)
         # agregamos el ingrediente a la receta
         recipe.ingredients.add(beef_ingredient)
         # creamos un nuevo ingrediente
-        pork_ingredient = Ingredient.objects.create(user=self.user, name='Pork')
+        pork_ingredient = Ingredient.objects.create(
+            user=self.user, name='Pork')
         # definimos la info para actualizar
-        payload = {'ingredients':[{'name':'Pork'}]}
+        payload = {'ingredients': [{'name': 'Pork'}]}
         # definimos la url
         url = detail_url(recipe.id)
         # hacemos la peticion
@@ -515,7 +511,6 @@ class PrivateRecipeApiTests(TestCase):
         # comprobamos que tag_lunch sustituyo a tag_breakfast
         self.assertIn(pork_ingredient, recipe.ingredients.all())
         self.assertNotIn(beef_ingredient, recipe.ingredients.all())
-
 
     def test_clear_recipe_ingredients(self):
         '''Test clearing recipes ingredients'''
@@ -534,12 +529,68 @@ class PrivateRecipeApiTests(TestCase):
         # comprobamos que se borro el ingrediente
         self.assertEqual(recipe.ingredients.count(), 0)
 
+    def test_filter_by_tags(self):
+        '''Tests filtering recipes by tags'''
+        # creamos dos recetas
+        r1 = create_recipe(user=self.user, title='Thai Vegetable Curry')
+        r2 = create_recipe(user=self.user, title='Aubergine with Tahini')
+        # creamos dos etiquetas
+        tag1 = Tag.objects.create(user=self.user, name='Vegan')
+        tag2 = Tag.objects.create(user=self.user, name='Vegetarian')
+        # agregamos las etiquetas a las recetas
+        r1.tags.add(tag1)
+        r2.tags.add(tag2)
+        # creamos una tercera receta sin ninguna tag asociada
+        r3 = create_recipe(user=self.user, title='Fish and chips')
+        # creamos los datos para la peticion de filtrado
+        params = {'tags': f'{tag1.id},{tag2.id}'}
+        # realizamos la peticion
+        res = self.client.get(RECIPES_URL, params)
+        # serializamos los valores desde la base de datos
+        s1 = RecipeSerializer(r1)
+        s2 = RecipeSerializer(r2)
+        s3 = RecipeSerializer(r3)
+        # chequeamos que en los datos que devuelve la peticion esten contenidos los datos
+        # de la primera y la segunda recetas y no los de la tercera que es la que no tiene
+        # las etiquetas
+        self.assertIn(s1.data, res.data)
+        self.assertIn(s2.data, res.data)
+        self.assertNotIn(s3.data, res.data)
+
+    def test_filter_by_ingredients(self):
+        '''Tests filtering recipes by ingredients'''
+        # creamos dos recetas
+        r1 = create_recipe(user=self.user, title='White Rice with pork')
+        r2 = create_recipe(user=self.user, title='Fish soup with potatoes')
+        # creamos dos ingredientes
+        ingredient1 = Ingredient.objects.create(
+            user=self.user, name='Potatoes')
+        ingredient2 = Ingredient.objects.create(user=self.user, name='Pork')
+        # agregamos los ingredientes a las recetas
+        r1.ingredients.add(ingredient2)
+        r2.ingredients.add(ingredient1)
+        # creamos una tercera receta sin ningun ingrediente asociado
+        r3 = create_recipe(user=self.user, title='Ramen')
+        # creamos los datos para la peticion de filtrado
+        params = {'ingredients': f'{ingredient1.id},{ingredient2.id}'}
+        # realizamos la peticion
+        res = self.client.get(RECIPES_URL, params)
+        # serializamos los valores desde la base de datos
+        s1 = RecipeSerializer(r1)
+        s2 = RecipeSerializer(r2)
+        s3 = RecipeSerializer(r3)
+        # chequeamos que en los datos que devuelve la peticion esten contenidos los datos
+        # de la primera y la segunda recetas y no los de la tercera que es la que no tiene
+        # los ingredientes
+        self.assertIn(s1.data, res.data)
+        self.assertIn(s2.data, res.data)
+        self.assertNotIn(s3.data, res.data)
+
 
 class ImageUploadTests(TestCase):
     '''Tests for the image upload API'''
 
-
-    # creamos un usuario, lo autenticamos y creamos una receta con los 
+    # creamos un usuario, lo autenticamos y creamos una receta con los
     # parametros por defecto
     def setUp(self):
         self.client = APIClient()
@@ -548,32 +599,31 @@ class ImageUploadTests(TestCase):
             'password123',
         )
         self.client.force_authenticate(self.user)
-        self.recipe=create_recipe(user=self.user)
+        self.recipe = create_recipe(user=self.user)
 
-    # el metodo tearDown se ejecuta despues de los tests, el setUp se 
+    # el metodo tearDown se ejecuta despues de los tests, el setUp se
     # ejecuta antes. se pone para asegurarse que la imagen se borra
     # despues de cada test
     def tearDown(self):
         self.recipe.image.delete()
 
-    
     def test_upload_image(self):
         '''Test uploading a image to a recipe'''
         # creamos un url a partir del id de la receta
-        url= image_upload_url(self.recipe.id)
+        url = image_upload_url(self.recipe.id)
         # creamos un archivo temporal, para crear una imagen y hacer el test
         with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
             # creamos una imagen de 10 por 10 px
-            img=Image.new('RGB', (10,10))
+            img = Image.new('RGB', (10, 10))
             # guarda la imagen de la memoria a un archivo
             img.save(image_file, format='JPEG')
             # esta linea mueve el puntero en memoria al inicio del archivo
             image_file.seek(0)
             # se crea el payload para la actualizacion
-            payload = {'image':image_file}
+            payload = {'image': image_file}
             # se realiza la peticion, especificando formulario 'multipart'
             # que es la forma recomendada para subir imagenes
-            res=self.client.post(url, payload, format='multipart')
+            res = self.client.post(url, payload, format='multipart')
         # refrescamos la base de datos
         self.recipe.refresh_from_db()
         # comprobamos la peticion

@@ -4,7 +4,7 @@ version: '3.9'
 # define los servicios
 services:
   app:
-    build:               
+    build:
       context: .         # va a crear el archivo de docker en el directorio actual
       args:
         - DEV=true
@@ -27,13 +27,14 @@ services:
 
   db:
     image: postgres:13-alpine
+    ports:    # expone el puerto para acceso externo, lo agregue para chequear los datos
+      - "5432:5432"
     volumes:    # se crea un volumen para guardar y cargar la info en la base de datos
       - dev-db-data:/var/lib/postgresql/data
     environment:    # se define las variables para la base de datos
       - POSTGRES_DB=devdb       # nombre de la base de datos
       - POSTGRES_USER=devuser       # usuario
       - POSTGRES_PASSWORD=changeme   # password
-
 volumes:
   dev-db-data:
   dev-static-data:
