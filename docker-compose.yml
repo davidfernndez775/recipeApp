@@ -22,6 +22,7 @@ services:
       - DB_NAME=devdb      # nombre de la base de datos
       - DB_USER=devuser     # usuario
       - DB_PASS=changeme    # password
+      - DEBUG=1     # se agrega cuando se hacen los cambios para produccion
     depends_on:       # se define el servicio que hay que implementar primero
       - db
 

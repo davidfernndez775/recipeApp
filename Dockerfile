@@ -1,6 +1,6 @@
 # Definimos el lenguaje y la versión de Linux (alpine) que es una distribución ligera
 FROM python:3.9-alpine3.13
-LABEL mantainer="davidfernandez999"
+LABEL maintainer="davidfernandez999"
 
 # Se agrega esta línea para imprimir directamente los mensajes de Python en la consola
 ENV PYTHONUNBUFFERED 1
